@@ -1,8 +1,15 @@
 .git
 .gitignore
 .env
+.env.*
 .venv
 __pycache__
 .pytest_cache
 tests
 *.pyc
+*.egg-info
+build
+dist
+.coverage
+coverage.xml
+htmlcov

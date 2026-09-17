@@ -8,11 +8,41 @@ read-only административный просмотр заметок, уп
 Архитектурные решения и границы текущего этапа описаны в
 [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
+## Стек
+
+- Python 3.11+, FastAPI и Jinja2;
+- SQLAlchemy 2.x, PostgreSQL и psycopg;
+- Alembic;
+- Pydantic Settings;
+- Argon2 (`pwdlib`) и PyJWT;
+- HTML, CSS и vanilla JavaScript без Node.js toolchain.
+
+## Требования
+
+Для рекомендуемого запуска нужны Docker Desktop либо Docker Engine с Docker
+Compose v2. Порты `8000` и `5432` должны быть свободны либо переопределены в
+`.env`. Для запуска без Docker нужны Python 3.11+ и доступный PostgreSQL; версия
+PostgreSQL в Compose — 17.
+
 ## Запуск через Docker Compose
 
-1. Скопируйте `.env.example` в `.env`, задайте локальный пароль PostgreSQL и
-   замените намеренно невалидный `JWT_SECRET_KEY=CHANGE_ME` случайной строкой
-   длиной не менее 32 символов. С placeholder приложение завершится при старте.
+1. Скопируйте `.env.example` в `.env`:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   Для Linux/macOS:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Задайте в `.env` локальный пароль PostgreSQL и замените намеренно невалидный
+   `JWT_SECRET_KEY=CHANGE_ME` случайной строкой длиной не менее 32 символов.
+   С placeholder приложение завершится при старте. Случайное значение можно
+   получить, например, командой `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+   Не добавляйте созданный `.env` в Git.
 2. Соберите и запустите приложение:
 
    ```bash
@@ -25,7 +55,14 @@ read-only административный просмотр заметок, уп
    docker compose exec api alembic upgrade head
    ```
 
-4. Откройте `http://localhost:8000/` в браузере.
+4. Убедитесь, что PostgreSQL имеет статус `healthy`, а API отвечает:
+
+   ```bash
+   docker compose ps
+   curl http://localhost:8000/health
+   ```
+
+5. Откройте `http://localhost:8000/` в браузере.
 
 Основные страницы:
 
@@ -34,6 +71,11 @@ read-only административный просмотр заметок, уп
 - `/notes` — личные заметки;
 - `/admin` — панель администратора;
 - `/health` — проверка состояния API.
+
+Документация API:
+
+- Swagger UI: `http://localhost:8000/docs`;
+- OpenAPI JSON: `http://localhost:8000/openapi.json`.
 
 Compose ожидает готовности PostgreSQL перед запуском API.
 
@@ -52,25 +94,18 @@ docker compose exec api python -m app.scripts.create_admin
 
 ## Локальный запуск
 
-Требуются Python 3.11+ и доступный PostgreSQL.
-
 ```bash
 python -m venv .venv
 # Активируйте окружение подходящей для вашей ОС командой.
 python -m pip install -e ".[dev]"
 # Скопируйте .env.example в .env, проверьте DATABASE_URL и JWT_SECRET_KEY.
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Тесты запускаются командой:
+Полный набор тестов запускается из корня проекта и использует изолированную
+тестовую БД, а не данные из Docker volume:
 
 ```bash
-pytest
-```
-
-Alembic связан с `Base.metadata`. Применить существующие миграции при локальном
-запуске можно командой:
-
-```bash
-alembic upgrade head
+python -m pytest
 ```

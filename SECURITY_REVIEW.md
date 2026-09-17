@@ -6,6 +6,12 @@ L1–L2 исправлены 2026-09-17; их `xfail`-сценарии стал�
 Разделы ниже сохраняют исходные сценарии и доказательства. CRITICAL без
 дополнительных условий не подтверждён.
 
+Текущее состояние после hardening и pre-submission pass: `203 passed`, failures
+и `xfail` отсутствуют. Одноразовые live/browser/config probes удалены перед
+сдачей; обычные regression tests сохранены. Поэтому сценарии, числа и приоритеты
+ниже следует читать как исторический отчёт до исправлений, а не список открытых
+дефектов текущей версии.
+
 ## Результаты проверок
 
 | Проверка | Результат |
@@ -46,8 +52,8 @@ security contract; это не исправление и не успешно п�
 - Почему проблема: полная имперсонация существующих пользователей, включая admin.
   Это не обход подписи при сильном неизвестном ключе: проблема в принятии известного ключа.
   Текущий локальный `.env` содержит другой 64-символьный ключ.
-- Тест: `test_example_secret_must_be_rejected`; live script
-  `tests/security_review/verify_isolated_config.py`.
+- Тест: `test_example_secret_must_be_rejected`; дополнительно использовался
+  одноразовый isolated live probe, не включённый в финальную сдачу.
 - Минимальное исправление: пример, не проходящий validation, явный отказ для
   известных placeholders, обязательная генерация случайного deployment-secret.
   Уже развёрнутые экземпляры с публичным ключом требуют ротации.
@@ -97,8 +103,8 @@ security contract; это не исправление и не успешно п�
   Успешный backend logout отдельно проверен: после него `/me` возвращает 401.
 - Почему проблема: пользователь, особенно на общем устройстве, считает сессию закрытой.
   Rotation также нарушает mutations в старой вкладке до обновления CSRF.
-- Тест: `browser_probe.py`, запущенный через `run_isolated.py browser_probe`;
-  backend rotation покрыта CSRF-матрицей.
+- Тест: browser probe в изолированной среде; backend rotation покрыта
+  сохраняемой в проекте CSRF-матрицей.
 - Минимальное исправление: redirect только после подтверждённого logout; при ошибке
   показать её и разрешить повтор. Обновлять stale CSRF контролируемо, не повторять
   произвольно mutation после неопределённого сетевого результата.
@@ -188,7 +194,8 @@ security contract; это не исправление и не успешно п�
   от placeholder. Поиск не обнаружил SQL dumps, PEM/private-key файлов, coverage/editor
   артефактов в проверяемом дереве. Предсказуемые audit/test credentials относятся только к тестам.
 - `.gitignore` исключает основные найденные артефакты; `.dockerignore` исключает `.env`.
-  Но `.git` отсутствует: проверить tracked files и историю утечек невозможно.
+  На момент исходного аудита `.git` отсутствовал. Перед сдачей создан Git-репозиторий;
+  `.env` игнорируется и не является tracked-файлом.
 - Почему проблема: отправка всей папки/zip может включить секреты вопреки `.gitignore`.
   Наличие локального `.env` само по себе не доказывает его публикацию.
 - Проверка: filesystem inventory и сравнение с ignore-файлами; теста нет.
@@ -226,27 +233,24 @@ security contract; это не исправление и не успешно п�
   content empty/100000/100001 проверены. Forbidden fields, null и пустой PATCH
   покрыты regression/backend suite. API не раскрывает traceback при воспроизведённом 500.
 
-## Что добавлено в этом проходе
+## Что сохранено после hardening
 
 - `tests/security_review/test_additional_regressions.py`: реальное удаление пользователя,
-  недоверие role claim, воспроизведение утечки bound parameter в exception.
-- `tests/security_review/run_isolated.py`: запуск имевшихся live/browser probes
-  на новом project, без изменения их прежних адресов и данных.
-- `tests/security_review/verify_isolated_config.py`: эксплуатация публичного ключа
-  в отдельном экземпляре с небезопасной конфигурацией.
+  недоверие role claim и проверка скрытия bound parameters в exception.
+- `tests/security_review/test_attacks.py`: обычные regression tests для закрытых
+  security findings.
 - Этот отчёт. Другие файлы не редактировались.
 
 Проверка основного baseline: `pytest --ignore=tests/security_review`.
-Полный набор: `pytest`. Для открытых дефектов можно использовать `--runxfail`;
-ожидаемые failures не устранялись изменением production-кода.
-Live/browser probes требуют явно созданного изолированного stack и доступных
-httpx/psycopg/Playwright; они не являются командой запуска против production.
+Полный набор: `pytest`. Исправленные сценарии больше не используют `xfail`.
+Одноразовые live/browser probes не являются частью финального test suite.
 
 ## Ограничения
 
 Аудит выполнялся локально, на HTTP, PostgreSQL 17, Python 3.12 и Chromium.
 Не проверялись production reverse proxy/TLS, внешняя доступность портов,
-Git-история, резервные копии, нагрузочный DoS и параллельные гонки авторизации.
+история до текущего единственного Git commit, резервные копии, нагрузочный DoS
+и параллельные гонки авторизации.
 SQLite использован для быстрых тестов; PostgreSQL constraints/live-сценарии
 проверены отдельно. Формальный CSRF bypass без XSS/контроля origin не обнаружен.
 Подделка sub без ключа не прошла; перенос действительного чужого bearer token
@@ -254,12 +258,13 @@ SQLite использован для быстрых тестов; PostgreSQL con
 README-команды build/up/migrate/create_admin с отдельным project сработали.
 Качество защиты не выводится из отсутствия findings у scanner.
 
-## Приоритеты
+## Исторические приоритеты
 
-- MUST FIX BEFORE SUBMISSION: H1, H2, M1, M2; fail-safe M3 для production;
-  исключить секреты и generated artifacts из материала сдачи (L4).
-- SHOULD FIX: M4, L1, security headers/no-store (L2), обновление уязвимых
-  инструментов и воспроизводимость сборки (L3).
+- Закрыты hardening pass: H1, H2, M1–M4, L1–L2.
+- Перед упаковкой по-прежнему необходимо исключать локальный `.env` и generated
+  artifacts (исторический L4).
+- Обновление инструментов и воспроизводимость dependency resolution из L3 можно
+  выполнять отдельно от текущего тестового задания.
 - CAN LEAVE AS TECH DEBT для локального тестового: полноценная deployment-hardening,
   HTTPS/HSTS вне приложения, rate limiting, last-admin invariant, server-side отзыв
-  JWT. Это не отменяет перечисленные MUST FIX.
+  JWT.
