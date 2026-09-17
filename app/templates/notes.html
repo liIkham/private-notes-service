@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block navigation %}
+<nav class="main-nav" aria-label="Основная навигация">
+    <a class="nav-link nav-link--active" href="/notes">Мои заметки</a>
+    <a id="admin-link" class="nav-link" href="/admin" hidden>Админ-панель</a>
+    <button id="logout-button" class="button button--ghost" type="button">Выйти</button>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <h1>Мои заметки</h1>
+        <p class="muted">Вы вошли как <strong id="current-username">...</strong></p>
+    </div>
+    <button id="new-note-button" class="button button--primary" type="button">+ Новая заметка</button>
+</section>
+
+<div id="notes-message" class="message" role="status" aria-live="polite" hidden></div>
+
+<section id="note-editor" class="panel note-editor" aria-labelledby="note-form-title" hidden>
+    <div class="panel__heading">
+        <h2 id="note-form-title">Новая заметка</h2>
+    </div>
+    <form id="note-form" class="stacked-form">
+        <label for="note-title">Заголовок</label>
+        <input id="note-title" name="title" type="text" maxlength="200" required>
+
+        <label for="note-content">Текст</label>
+        <textarea id="note-content" name="content" rows="9" maxlength="100000" required></textarea>
+
+        <div class="form-actions">
+            <button id="note-submit" class="button button--primary" type="submit">Сохранить</button>
+            <button id="note-cancel" class="button button--secondary" type="button">Отмена</button>
+        </div>
+    </form>
+</section>
+
+<section aria-labelledby="notes-list-title">
+    <h2 id="notes-list-title" class="visually-hidden">Список заметок</h2>
+    <p id="notes-loading" class="loading-state">Загрузка...</p>
+    <div id="notes-list" class="notes-grid"></div>
+    <p id="notes-empty" class="empty-state" hidden>У вас пока нет заметок</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/notes.js') }}"></script>
+{% endblock %}

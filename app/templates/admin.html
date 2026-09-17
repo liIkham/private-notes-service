@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block navigation %}
+<nav class="main-nav" aria-label="Основная навигация">
+    <a class="nav-link" href="/notes">Мои заметки</a>
+    <a class="nav-link nav-link--active" href="/admin">Админ-панель</a>
+    <button id="logout-button" class="button button--ghost" type="button">Выйти</button>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <h1>Админ-панель</h1>
+        <p class="muted">Администратор: <strong id="current-username">...</strong></p>
+    </div>
+</section>
+
+<div id="admin-message" class="message" role="status" aria-live="polite" hidden></div>
+
+<section class="panel" aria-labelledby="users-title">
+    <div class="panel__heading">
+        <h2 id="users-title">Пользователи</h2>
+    </div>
+    <p id="users-loading" class="loading-state">Загрузка...</p>
+    <div class="table-scroll">
+        <table id="users-table" hidden>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Пользователь</th>
+                    <th>Роль</th>
+                    <th>Активен</th>
+                    <th>Создан</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel" aria-labelledby="admin-notes-title">
+    <div class="panel__heading">
+        <h2 id="admin-notes-title">Все заметки</h2>
+        <span class="badge">Только чтение</span>
+    </div>
+    <p id="admin-notes-loading" class="loading-state">Загрузка...</p>
+    <p id="admin-notes-empty" class="empty-state" hidden>Заметок пока нет</p>
+    <div class="table-scroll">
+        <table id="admin-notes-table" hidden>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Владелец</th>
+                    <th>Заголовок</th>
+                    <th>Текст</th>
+                    <th>Создана</th>
+                    <th>Обновлена</th>
+                </tr>
+            </thead>
+            <tbody id="admin-notes-body"></tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/admin.js') }}"></script>
+{% endblock %}

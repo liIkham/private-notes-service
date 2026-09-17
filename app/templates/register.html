@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auth-card" aria-labelledby="register-title">
+    <h1 id="register-title">Регистрация</h1>
+    <p class="muted">Создайте аккаунт для приватных текстовых заметок.</p>
+
+    <div id="register-message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <noscript>
+        <p class="message message--error">Для регистрации необходимо включить JavaScript.</p>
+    </noscript>
+
+    <form id="register-form" class="stacked-form" method="post" action="/api/auth/register">
+        <label for="username">Имя пользователя</label>
+        <input id="username" name="username" type="text" autocomplete="username"
+               minlength="3" maxlength="64" pattern="[A-Za-z0-9_-]+" required autofocus>
+        <p class="field-hint">3–64 символа: латинские буквы, цифры, _ и -</p>
+
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password"
+               autocomplete="new-password" minlength="8" maxlength="128" required>
+        <p class="field-hint">От 8 до 128 символов.</p>
+
+        <label for="password-repeat">Повторите пароль</label>
+        <input id="password-repeat" name="password-repeat" type="password"
+               autocomplete="new-password" minlength="8" maxlength="128" required>
+
+        <button id="register-submit" class="button button--primary" type="submit">
+            Зарегистрироваться
+        </button>
+    </form>
+
+    <p class="auth-switch">Уже есть аккаунт? <a href="/login">Войти</a></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/register.js') }}"></script>
+{% endblock %}

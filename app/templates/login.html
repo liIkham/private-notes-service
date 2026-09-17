@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auth-card" aria-labelledby="login-title">
+    <h1 id="login-title">Вход</h1>
+    <p class="muted">Войдите, чтобы работать со своими заметками.</p>
+
+    <div id="login-message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <noscript>
+        <p class="message message--error">Для входа необходимо включить JavaScript.</p>
+    </noscript>
+
+    <form id="login-form" class="stacked-form" method="post" action="/api/auth/login">
+        <label for="username">Имя пользователя</label>
+        <input id="username" name="username" type="text" autocomplete="username"
+               minlength="3" maxlength="64" required autofocus>
+
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password"
+               autocomplete="current-password" minlength="8" maxlength="128" required>
+
+        <button id="login-submit" class="button button--primary" type="submit">Войти</button>
+    </form>
+
+    <p class="auth-switch">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/login.js') }}"></script>
+{% endblock %}
